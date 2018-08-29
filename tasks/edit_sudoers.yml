@@ -1,0 +1,13 @@
+---
+- name: Make sure users from the wheel group can use sudo
+  hosts: localhost
+  user: root
+
+  tasks:
+    - name: Make sure users from the wheel group can use sudo
+      lineinfile:
+        dest: /etc/sudoers
+        state: present
+        regexp: '^%wheel'
+        line: '%wheel ALL=(ALL) ALL'
+        validate: 'visudo -cf %s'

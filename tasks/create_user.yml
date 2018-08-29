@@ -1,0 +1,44 @@
+---
+- name: Creating users
+  hosts: server1.redhat.com
+  user: root
+  vars:
+    metadata:
+      name: create_user.yml
+      description: >
+        Create user $user add to $group and copy public key to authorized_keys
+    users:
+      - name: johnb
+        group: wheel
+        homedir: /home/johnb
+        ssh_key: |
+          ssh-rsa ... 
+
+  tasks:
+    - user: name="{{ item.name }}" group="{{ item.group }}" home="{{ item.homedir }}" append=yes
+      with_items: "{{ users }}" 
+
+    - name: Creating .ssh directory
+      file:
+        path: "{{ item.homedir }}/.ssh"
+        state: directory
+        owner: "{{ item.name }}"
+        mode: "u+rwx"
+      with_items:
+        - "{{ users }}"
+
+    - name: Creating the authorized_keys
+      file:
+        path: "{{ item.homedir }}/.ssh/authorized_keys"
+        state: touch
+        owner: "{{ item.name }}"
+        mode: "u+rw"
+      with_items:
+        - "{{ users }}"
+
+    - name: Copy public key to users authorized_keys
+      lineinfile:
+        dest: "{{ item.homedir }}/.ssh/authorized_keys"
+        line: "{{ item.ssh_key }}"
+      with_items:
+        - "{{ users }}"

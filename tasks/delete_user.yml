@@ -1,0 +1,14 @@
+---
+- name: Deleting users
+  hosts: server1.redhat.com
+  user: root
+  vars:
+    metadata:
+      name: delete_user.yml
+      description: >
+        Delete user $user and his homedir
+    users:
+      - name: johnb
+  tasks:
+    - user: name="{{ item.name }}" state=absent remove=yes
+      with_items: "{{ users }}"

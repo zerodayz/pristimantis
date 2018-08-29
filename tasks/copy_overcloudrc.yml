@@ -1,0 +1,16 @@
+---
+- name: Copying overcloudrc file
+  hosts: Controller
+  user: heat-admin
+  vars:
+    metadata:
+      name: copy_overcloudrc.yml
+      description: >
+        Make sure you got the correct overcloudrc in $overcloudrc_file below.
+    overcloudrc_file: /home/stack/overcloudrc
+  tasks:
+    - name: Copy overcloudrc to controllers
+      template:
+        src: "{{ overcloudrc_file }}"
+        dest: "/home/heat-admin/overcloudrc"
+        mode: 0640

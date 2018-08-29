@@ -1,0 +1,17 @@
+[localhost]
+localhost
+
+[Controller]
+overcloud-controller-0
+overcloud-controller-1
+overcloud-controller-2
+
+[Compute]
+overcloud-compute-0
+
+[undercloud]
+undercloud
+
+[overcloud:children]
+Compute
+Controller

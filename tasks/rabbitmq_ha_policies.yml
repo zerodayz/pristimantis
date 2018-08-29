@@ -1,0 +1,28 @@
+---
+- name: Set RabbitMQ HA policies
+  hosts: overcloud-controller-0
+  vars:
+    metadata:
+      name: rabbitmq_ha_policies.yml
+      description: >
+        Make sure the RabbitMQ cluster has HA for all queues except the built-in amq.* ones 
+  become: true
+
+  tasks:
+  - name: Check if we are in HA cluster environment
+    register: pcs_cluster_status
+    command: pcs cluster status
+    changed_when: false
+
+  - name: Get RabbitMQ policies
+    when: "pcs_cluster_status.rc == 0"
+    register: actual_rabbitmq_policies
+    command: "rabbitmqctl list_policies"
+    changed_when: false
+
+  - name: Set the RabbitMQ HA policies
+    rabbitmq_policy: name=ha-all pattern='^(?!amq\\.).*' tags="ha-mode=all"
+    when: >
+      pcs_cluster_status.rc == 0
+      and
+      '^(?!amq\\\\.).*\t{"ha-mode":"all"}' not in actual_rabbitmq_policies.stdout

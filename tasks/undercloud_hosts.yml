@@ -1,0 +1,16 @@
+---
+- name: Add undercloud ip to /etc/hosts of overcloud nodes
+  hosts: overcloud
+  vars:
+    metadata:
+      name: undercloud_hosts.yml
+      description: >
+        When SSH connection is slow from undercloud to overcloud nodes.
+    ip_address: 192.0.2.1
+    host: undercloud
+  become: true
+  tasks:
+  - name: Add undercloud ip to /etc/hosts of overcloud nodes
+    lineinfile:
+      dest: /etc/hosts
+      line: "{{ ip_address }} {{ host }}"

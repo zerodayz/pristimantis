@@ -1,0 +1,14 @@
+---
+- name: Install needed packages
+  hosts: localhost
+  user: root
+
+  tasks:
+    - name: Install needed packages
+      yum:
+        name:
+          - "vim-enhanced"
+          - "screen"
+          - "mlocate"
+          - "sysstat"
+        state: latest
