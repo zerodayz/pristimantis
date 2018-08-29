@@ -8,6 +8,7 @@ overcloud-controller-2
 
 [Compute]
 overcloud-compute-0
+overcloud-compute-1
 
 [undercloud]
 undercloud
