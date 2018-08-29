@@ -1,0 +1,234 @@
+---
+- name: Set bootstrap status to false on all Controllers
+  hosts: Controller
+  user: heat-admin
+  become: true
+  tasks:
+    - set_fact:
+        bootstrap_node: false
+        
+- name: Set the bootstrap status on the first Controller node
+  hosts: Controller[0]
+  user: heat-admin
+  become: true
+  tasks:
+    - set_fact:
+        bootstrap_node: true
+        
+- name: Initializing local backup directory
+  hosts: undercloud
+  user: stack
+  tasks:
+    - name: Remove existing local backup directory
+      file:
+        path: /var/tmp/overcloud-backup/
+        state: absent
+    - name: Create a temporary local backup directory
+      file:
+        path: /var/tmp/overcloud-backup/
+        state: directory
+    - name: Unarchive the filesystem
+      script: |
+        /bin/tar --xattrs --strip-components=3 \
+          -zxf {{ overcloud_backup_tar }} \
+          -C /var/tmp/overcloud-backup/ 
+
+- name: Copy mysql database to the bootstrap Controller node
+  hosts: Controller
+  user: heat-admin
+  become: true
+  any_errors_fatal: true
+  tasks:
+    - name: Remove existing database backup directory
+      file:
+        path: /var/tmp/overcloud-backup-database/
+        state: absent
+      when: bootstrap_node == true
+    - name: Create a temporary database backup directory
+      file:
+        path: /var/tmp/overcloud-backup-database/
+        state: directory
+      when: bootstrap_node == true
+    - name: Copy database tar to the bootstrap Controller node
+      copy:
+        src: /var/tmp/overcloud-backup/overcloud-backup-database.tar
+        dest: /var/tmp/overcloud-backup-database/overcloud-backup-database.tar
+      when: bootstrap_node == true
+    - name: Unarchive the database tar
+      script: |
+        /bin/tar --xattrs \
+          -zxf /var/tmp/overcloud-backup-database/overcloud-backup-database.tar \
+          -C /var/tmp/overcloud-backup-database/
+      when: bootstrap_node == true
+
+- name: Restore the mysql database
+  hosts: Controller
+  user: heat-admin
+  become: true
+  any_errors_fatal: true
+  tasks:
+    - name: Get the database bind host IP on each Controller nodes
+      script: |
+        /bin/hiera -c /etc/puppet/hiera.yaml mysql_bind_host
+      register: mysql_bind_host
+      
+    - name: Temporarily disable to database port from external access on each Controller nodes
+      iptables:
+        chain: 'INPUT'
+        destination: "{{ mysql_bind_host.stdout|trim }}"
+        destination_port: 3306
+        protocol: tcp
+        jump: DROP
+
+    - name: Unmanage galera
+      command: "pcs resource unmanage galera"
+      when: bootstrap_node == true
+
+    - name: Comment out wsrep_cluster_address
+      replace:
+        path: /etc/my.cnf.d/galera.cnf
+        regexp: '^wsrep_cluster_address'
+        replace: '#wsrep_cluster_address'
+
+    - name: Get the database root password
+      script: |
+        /bin/hiera -c /etc/puppet/hiera.yaml mysql::server::root_password
+      register: mysql_root_password
+
+    - name: Shutdown the database on each Controller nodes
+      command: "killall mysqld"
+      ignore_errors: yes
+
+    - name: Remove old mysql directory on each Controller nodes
+      file:
+        path: /var/lib/mysql
+        state: absent
+
+    - name: Create new mysql directory on each Controller nodes
+      file:
+        path: /var/lib/mysql
+        state: directory
+        mode: 0755
+        owner: mysql
+        group: mysql
+
+    - name: Initialize empty database on each Controller nodes
+      command: "sudo mysql_install_db --datadir=/var/lib/mysql --user=mysql"
+
+    - name: Update mysql directory ownership on each Controller nodes
+      file:
+        path: /var/lib/mysql
+        state: directory
+        mode: 0755
+        owner: mysql
+        group: mysql
+
+    - name: Restore SELinux context on each Controller nodes
+      command: "sudo restorecon -R /var/lib/mysql"
+
+    - name: Backup the root mysql config on each Controller nodes
+      copy:
+        remote_src: true
+        src: /root/.my.cnf
+        dest: /root/.my.cnf.old
+      ignore_errors: yes
+
+    - name: Remove the root mysql config on each Controller nodes
+      file:
+        path: /root/.my.cnf
+        state: absent
+      ignore_errors: yes
+
+    - name: Backup the clustercheck config on each Controller nodes
+      copy:
+        remote_src: true
+        src: /etc/sysconfig/clustercheck
+        dest: /etc/sysconfig/clustercheck.old
+      ignore_errors: yes
+
+    - name: Remove the clustercheck config on each Controller nodes
+      file:
+        path: /etc/sysconfig/clustercheck
+        state: absent
+      ignore_errors: yes
+
+    - name: Manage galera
+      command: "sudo pcs resource manage galera"
+      when: bootstrap_node == true
+
+    - name: Cleanup galera
+      command: "sudo pcs resource cleanup galera"
+      when: bootstrap_node == true
+
+    - name: Wait for database to come up on all host
+      wait_for:
+        port: 3306
+        host: "{{ mysql_bind_host.stdout|trim }}"
+
+    - name: Cleanup galera again (in case of monitor errors)
+      command: "sudo pcs resource cleanup galera"
+      when: bootstrap_node == true
+  
+    - name: Wait for database to come up on all host
+      wait_for:
+        port: 3306
+        host: "{{ mysql_bind_host.stdout|trim }}"
+
+    - pause:
+        prompt: "Waiting for 30 seconds so pcs can promote the galera resources to master"
+        seconds: 30
+
+    - name: Import mysql data
+      script: |
+        /bin/mysql -u root < /var/tmp/overcloud-backup-database/mysql/openstack_databases.sql
+      when: bootstrap_node == true
+      
+    - name: Import grants data
+      script: | 
+        /bin/mysql -u root < /var/tmp/overcloud-backup-database/mysql/openstack_databases_grants.sql
+      when: bootstrap_node == true
+      
+    - name: Set the root password back to the original
+      command: "sudo /usr/bin/mysqladmin -u root password {{ mysql_root_password.stdout|trim }}"
+      when: bootstrap_node == true
+      
+    - name: Restore the root mysql config
+      copy:
+        remote_src: true
+        src: /root/.my.cnf.old
+        dest: /root/.my.cnf
+
+    - name: Remove the backed up root mysql config
+      file:
+        path: /root/.my.cnf.old
+        state: absent
+
+    - name: Restore the clustercheck mysql config
+      copy:
+        remote_src: true
+        src: /etc/sysconfig/clustercheck.old
+        dest: /etc/sysconfig/clustercheck
+
+    - name: Remove the backed up clustercheck config
+      file:
+        path: /etc/sysconfig/clustercheck.old
+        state: absent
+
+    - name: Comment out wsrep_cluster_address
+      replace:
+        path: /etc/my.cnf.d/galera.cnf
+        regexp: '#wsrep_cluster_address'
+        replace: 'wsrep_cluster_address'
+
+    - name: Re-enable the database port
+      iptables:
+        chain: 'INPUT'
+        destination: "{{ mysql_bind_host.stdout|trim }}"
+        destination_port: 3306
+        protocol: tcp
+        jump: DROP
+        state: absent
+
+    - name: Cleanup galera to ensure the database backup is working and replicating correctly on all Controller nodes
+      command: "sudo pcs resource cleanup galera"
+      when: bootstrap_node == true
