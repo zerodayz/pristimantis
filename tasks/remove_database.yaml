@@ -1,0 +1,11 @@
+---
+- name: Removing database on the Controller node
+  hosts: Controller
+  user: heat-admin
+  become: true
+  tasks:
+    - name: Remove existing database directory
+      file:
+        path: /var/lib/mysql
+        state: absent
+
