@@ -1,10 +1,10 @@
 #!/bin/bash
 
-virtualenv --system-site-packages ansible-env
+# virtualenv --system-site-packages ansible-env
 # Workaround the following is executed in script 
 # in current shell instead of forking
 
 export ANSIBLE_LIBRARY=~/pristimantis/modules
 
-. ./ansible-env/bin/activate
-pip install ansible
+#. ./ansible-env/bin/activate
+#pip install ansible
