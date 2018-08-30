@@ -1,4 +1,6 @@
 ---
+# From https://review.openstack.org/#/c/582453/
+# By dan Macpherson
 - name: Initializing local backup directory
   hosts: undercloud
   user: stack
