@@ -69,7 +69,7 @@
     - name: Create an archive of the overcloud sosreports
       script: |
         /bin/tar --ignore-failed-read \
-          -zcf /home/stack/overcloud-sosreports-{{ fixed_timestamp }}.tar \
+          -zcf /home/stack/overcloud-sosreports-{{ case_id }}-{{ fixed_timestamp }}.tar \
           -C /var/tmp/overcloud-sosreport/ .
     - name: Remove existing local sosreport directory
       file:
