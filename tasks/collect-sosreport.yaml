@@ -1,0 +1,77 @@
+---
+- name: Initializing local sosreport directory
+  hosts: undercloud
+  user: stack
+  tasks:
+    - name: Get the timestamp
+      set_fact:
+        fixed_timestamp: "{{ ansible_date_time.iso8601_basic_short }}"
+    - name: Remove existing local sosreport directory
+      file:
+        path: /var/tmp/overcloud-sosreport/
+        state: absent
+    - name: Create a temporary local sosreport directory
+      file:
+        path: /var/tmp/overcloud-sosreport/
+        state: directory
+          
+- name: Create sosreport
+  hosts: "{{ hosts }}"
+  user: heat-admin
+  become: true
+  tasks:
+    - name: Create a temporary local sosreport directory
+      file:
+        path: /var/tmp/overcloud-sosreport/
+        state: directory
+    - name: Create an sosreport archive
+      script: |
+        /usr/sbin/sosreport --all-logs \
+        --log-size 4096 \
+        --verify \
+        --case-id {{ case_id }} \
+        {% if skip_plugins is defined %}
+        --skip-plugins {{ skip_plugins }} \
+        {% endif %}
+        {% if only_plugins is defined %}
+        --only-plugins {{ only_plugins }} \
+        {% endif %}
+        --tmp-dir /var/tmp/overcloud-sosreport/ \
+        --batch
+      
+- name: Copy sosreport archive to the undercloud
+  hosts: "{{ hosts }}"
+  user: heat-admin
+  become: true
+  tasks:
+    - name: Find the tar files to copy to undercloud
+      find:
+        paths: "/var/tmp/overcloud-sosreport"
+        recurse: no
+        patterns: "*.tar.xz"
+      register: file_to_copy
+    - name: Copy the tar files to the undercloud
+      fetch:
+        src: "{{ item.path }}"
+        dest: /var/tmp/overcloud-sosreport/
+        flat: yes 
+      with_items:
+        -  "{{ file_to_copy.files }}"
+    - name: Remove the overcloud-sosreport directory
+      file:
+        state: absent
+        path: /var/tmp/overcloud-sosreport/
+
+- name: Creating sosreport archive
+  hosts: undercloud
+  user: stack
+  tasks:
+    - name: Create an archive of the overcloud sosreports
+      script: |
+        /bin/tar --ignore-failed-read \
+          -zcf /home/stack/overcloud-sosreports-{{ fixed_timestamp }}.tar \
+          -C /var/tmp/overcloud-sosreport/ .
+    - name: Remove existing local sosreport directory
+      file:
+        path: /var/tmp/overcloud-sosreport/
+        state: absent
