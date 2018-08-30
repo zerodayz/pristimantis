@@ -1,4 +1,6 @@
 ---
+# From https://review.openstack.org/#/c/582453/
+# By dan Macpherson
 - name: Set bootstrap status to false on all Controllers
   hosts: Controller
   user: heat-admin
