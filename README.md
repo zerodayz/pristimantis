@@ -2,7 +2,7 @@
 
 # Introduction
 
-Pristimantis is Automation framework to help with managing your servers.
+Pristimantis is set of ansible playbooks and scripts to help with managing your servers.
 
 Please if you have any idea on any improvements please do not hesitate to open an issue.
 
