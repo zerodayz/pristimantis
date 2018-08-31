@@ -17,3 +17,15 @@ ansible-playbook -i inventory tasks/collect-sosreport.yaml -e case_id=12345 -e o
 ansible-playbook -i inventory tasks/collect-sosreport.yaml -e case_id=12345 -e only_plugins=system -e hosts=Controller --list-hosts
 ansible-playbook -i inventory tasks/collect-sosreport.yaml -e case_id=12345 -e only_plugins=system -e hosts=overcloud-compute-0 --list-hosts
 ```
+
+##### Send command
+
+```bash
+ansible Controller -u heat-admin -m command -a 'id'
+```
+
+##### Send command (root)
+
+```bash
+ansible Controller -b -u heat-admin -m command -a 'id'
+```
