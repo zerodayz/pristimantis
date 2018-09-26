@@ -8,7 +8,6 @@ controller-2
 
 [Compute]
 compute-0
-compute-1
 
 [undercloud]
 undercloud

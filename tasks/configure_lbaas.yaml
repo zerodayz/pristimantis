@@ -1,0 +1,105 @@
+---
+- name: Install the LBaaS to Controller
+  hosts: Controller
+  user: heat-admin
+  become: true
+  tasks:
+  - name: Installs the openstack-neutron-lbaas package
+    yum:
+      name:
+        - "openstack-neutron-lbaas"
+      state: latest
+
+- name: Adds the LBaaS table to neutron DB
+  hosts: Controller[0]
+  user: heat-admin
+  become: true
+  tasks:
+  - name: Adds the LBaaS tables to the neutron DB
+    command: neutron-db-manage --subproject neutron-lbaas --config-file /etc/neutron/neutron.conf --config-file /etc/neutron/plugins/ml2/ml2_conf.ini upgrade head
+
+- name: Change the service provider in neutron_lbaas.conf
+  hosts: Controller
+  user: heat-admin
+  become: true
+  tasks:
+  # service_provider=LOADBALANCERV2:Haproxy:neutron_lbaas.drivers.haproxy.plugin_driver.HaproxyOnHostPluginDriver:default
+  - name: Change the service provider in neutron_lbaas.conf
+    command: crudini --set /etc/neutron/neutron_lbaas.conf service_providers service_provider LOADBALANCERV2:Haproxy:neutron_lbaas.drivers.haproxy.plugin_driver.HaproxyOnHostPluginDriver:default
+
+- name: Configures the service plugins in neutron.conf
+  hosts: Controller
+  user: heat-admin
+  become: true
+  tasks:
+  # service_plugins=neutron_lbaas.services.loadbalancer.plugin.LoadBalancerPluginv2
+  - name: Change the service plugins in neutron.conf
+    command: crudini --set /etc/neutron/neutron.conf DEFAULT service_plugins router,qos,trunk,neutron_lbaas.services.loadbalancer.plugin.LoadBalancerPluginv2
+
+- name: Configures the interface driver in lbaas_agent.ini
+  hosts: Controller
+  user: heat-admin
+  become: true
+  tasks:
+  # interface_driver =neutron.agent.linux.interface.OVSInterfaceDriver
+  # ovs_use_veth = False
+  - name: Change the interface driver in lbaas_agent.ini
+    command: crudini --set /etc/neutron/lbaas_agent.ini DEFAULT interface_driver neutron.agent.linux.interface.OVSInterfaceDriver
+
+  - name: Change the ovs_use_veth to False in lbaas_agent.ini
+    command: crudini --set /etc/neutron/lbaas_agent.ini DEFAULT ovs_use_veth False
+
+- name: Configures the user group in services_lbaas.conf
+  hosts: Controller
+  user: heat-admin
+  become: true
+  tasks:
+  # user_group = haproxy
+  - name: Change the user group to haproxy in services_lbaas.conf
+    command: crudini --set /etc/neutron/services_lbaas.conf DEFAULT user_group haproxy
+
+- name: Make sure the LBaaSV1 is stopped and disabled
+  hosts: Controller
+  user: heat-admin
+  ignore_errors: true
+  become: true
+  tasks:
+  - name: Stop the LBaaSV1 service
+    systemd:
+      name: neutron-lbaas-agent.service
+      enabled: no
+
+  - name: Disable the LBaaSV1 service
+    systemd:
+      name: neutron-lbaas-agent.service
+      state: stopped
+
+  - name: Masks the LBaaSV1 service
+    systemd:
+      name: neutron-lbaas-agent.service
+      masked: yes
+
+- name: Make sure the LBaaSV2 is started and enabled
+  hosts: Controller
+  user: heat-admin
+  become: true
+  tasks:
+  - name: Enable the LBaaSV2 service
+    systemd:
+      name: neutron-lbaasv2-agent.service
+      state: started
+
+  - name: Start the LBaaSV2 service
+    systemd:
+      name: neutron-lbaasv2-agent.service
+      enabled: yes
+
+- name: Make sure the neutron server is restarted
+  hosts: Controller
+  user: heat-admin
+  become: true
+  tasks:
+  - name: Restarts the neutron-server
+    systemd:
+      name: neutron-server.service
+      state: restarted
