@@ -21,10 +21,17 @@ Red Hat Enterprise Linux Server release 7.5 (Maipo)
 Reference: https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/10/html/networking_guide/sec-lbaas
 ```
 
+## Before
+
+```
+[stack@undercloud-0 pristimantis]$ source ~stack/overcloudrc
+[stack@undercloud-0 pristimantis]$ neutron agent-list | grep -i lbaas
+[stack@undercloud-0 pristimantis]$
+```
+
 ## Configuration
 
 ```
-[stack@undercloud-0 pristimantis]$ neutron agent-list | grep -i lbaas
 [stack@undercloud-0 pristimantis]$ ansible-playbook tasks/configure_lbaas.yaml
 
 PLAY [Install the LBaaS to Controller]
@@ -40,6 +47,20 @@ ok: [controller-2]
 ok: [controller-0]
 
 Continuing...
+
+PLAY RECAP
+controller-0               : ok=22   changed=10   unreachable=0    failed=0
+controller-1               : ok=20   changed=9    unreachable=0    failed=0
+controller-2               : ok=20   changed=9    unreachable=0    failed=0
+
 ```
 
-## Verification
+## After
+
+```
+[stack@undercloud-0 pristimantis]$ source ~stack/overcloudrc
+[stack@undercloud-0 pristimantis]$ neutron agent-list | grep -i lbaas
+| 925a55c4-3c28-4569-9684-f4f2e5564a70 | Loadbalancerv2 agent | controller-0.localdomain |                   | :-)   | True           | neutron-lbaasv2-agent     |
+| dd4f7a24-0234-484f-b79d-21493eb961a7 | Loadbalancerv2 agent | controller-2.localdomain |                   | :-)   | True           | neutron-lbaasv2-agent     |
+| e3413be8-ad3e-4336-a701-d3be0b4d0e3b | Loadbalancerv2 agent | controller-1.localdomain |                   | :-)   | True           | neutron-lbaasv2-agent     |
+```
