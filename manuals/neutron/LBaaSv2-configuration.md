@@ -1,5 +1,7 @@
 # LBaaSv2 Configuration
 
+Reference: https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/10/html/networking_guide/sec-lbaas
+
 ## Environment:
 
 ```
@@ -17,8 +19,6 @@ Red Hat OpenStack Platform release 10.0 (Newton)
 
 [root@undercloud-0 ~]# cat /etc/system-release
 Red Hat Enterprise Linux Server release 7.5 (Maipo)
-
-Reference: https://access.redhat.com/documentation/en-us/red_hat_openstack_platform/10/html/networking_guide/sec-lbaas
 ```
 
 ## Before
@@ -63,4 +63,74 @@ controller-2               : ok=20   changed=9    unreachable=0    failed=0
 | 925a55c4-3c28-4569-9684-f4f2e5564a70 | Loadbalancerv2 agent | controller-0.localdomain |                   | :-)   | True           | neutron-lbaasv2-agent     |
 | dd4f7a24-0234-484f-b79d-21493eb961a7 | Loadbalancerv2 agent | controller-2.localdomain |                   | :-)   | True           | neutron-lbaasv2-agent     |
 | e3413be8-ad3e-4336-a701-d3be0b4d0e3b | Loadbalancerv2 agent | controller-1.localdomain |                   | :-)   | True           | neutron-lbaasv2-agent     |
+```
+
+## Testing LBaaSv2
+
+```
+[stack@undercloud-0 openstack]$ nova list
++--------------------------------------+-------------------+--------+------------+-------------+----------------------+
+| ID                                   | Name              | Status | Task State | Power State | Networks             |
++--------------------------------------+-------------------+--------+------------+-------------+----------------------+
+| 945dd0e3-1488-4b39-ada3-03fd6f40443d | dummy-instance-01 | ACTIVE | -          | Running     | default=192.168.1.12 |
+| 60be67e0-a009-464b-8ed6-73e7d1fd8f9a | dummy-instance-02 | ACTIVE | -          | Running     | default=192.168.1.8  |
++--------------------------------------+-------------------+--------+------------+-------------+----------------------+
+[stack@undercloud-0 openstack]$ neutron subnet-list
++--------------------------------------+---------------------------------------------------+------------------+------------------------------------------------------+
+| id                                   | name                                              | cidr             | allocation_pools                                     |
++--------------------------------------+---------------------------------------------------+------------------+------------------------------------------------------+
+| 62b73dd3-7355-4829-97a4-c9ed9c65b647 | external_subnet                                   | 10.0.0.0/24      | {"start": "10.0.0.210", "end": "10.0.0.250"}         |
+| eac25d28-e6fa-4d9c-bd29-b9b7e6507405 | HA subnet tenant a09a48f113ba4e30b134fdbf93adb6d6 | 169.254.192.0/18 | {"start": "169.254.192.1", "end": "169.254.255.254"} |
+| edeb5e06-7193-4081-8da9-3460f504d9bd | priv-subnet                                       | 192.168.1.0/24   | {"start": "192.168.1.2", "end": "192.168.1.254"}     |
++--------------------------------------+---------------------------------------------------+------------------+------------------------------------------------------+
+```
+
+## Create LBaaSV2
+
+```
+neutron lbaas-loadbalancer-create --name first_lb1 priv-subnet
+neutron lbaas-listener-create --loadbalancer first_lb1 --protocol HTTP --protocol-port 80 --name listener1
+neutron lbaas-pool-create --lb-algorithm ROUND_ROBIN --listener listener1 --protocol HTTP --name POOL1
+neutron lbaas-member-create --subnet priv-subnet --address 192.168.1.12 --protocol-port 80 POOL1
+neutron lbaas-member-create --subnet priv-subnet --address 192.168.1.8 --protocol-port 80 POOL1
+
+[stack@undercloud-0 openstack]$ neutron lbaas-loadbalancer-list
++--------------------------------------+-----------+--------------+---------------------+----------+
+| id                                   | name      | vip_address  | provisioning_status | provider |
++--------------------------------------+-----------+--------------+---------------------+----------+
+| 94a38e69-9071-4df6-bd31-1c5eb06af7e5 | first_lb1 | 192.168.1.13 | ACTIVE              | haproxy  |
++--------------------------------------+-----------+--------------+---------------------+----------+
+
+```
+
+- Start webserver on dummy-instance-01 and dummy-instance-02
+
+## Verification
+
+```
+[root@controller-2 ~]# while true; do curl 192.168.1.13; sleep 1; echo; done
+dummy-instance-02
+dummy-instance-01
+dummy-instance-02
+dummy-instance-01
+dummy-instance-02
+dummy-instance-01
+dummy-instance-02
+dummy-instance-01
+dummy-instance-02
+dummy-instance-01
+dummy-instance-02
+dummy-instance-01
+dummy-instance-02
+dummy-instance-01
+dummy-instance-02
+dummy-instance-01
+dummy-instance-02
+dummy-instance-01
+dummy-instance-02
+dummy-instance-01
+dummy-instance-02
+dummy-instance-01
+dummy-instance-02
+dummy-instance-01
 ```
