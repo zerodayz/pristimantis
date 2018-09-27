@@ -51,3 +51,11 @@ ovs-appctl fdb/show <br> list mac/vlan pairs learned
 ovs-dpctl can show, create, modify, and delete Open vSwitch datapaths.
 ovs-dpctl dump-flows dump Datapath (kernel cached) flows
 ```
+
+## OpenvSwitch tcpdump commands
+
+Capture the packets on Open vSwitch interface and saves to pcap file
+
+```
+ovs-tcpdump -e -n -i <OpenvSwitch Interface> -w /tmp/$(hostname)-$(date +%F).pcap
+```
