@@ -7,5 +7,5 @@
 
 ## Use Cases
 
-[Communication of two VMs](Communication-two-VMs.md)
+[Communication of two VMs](Communication-two-VMs.md)  
 [Traces Examples](Traces-Examples.md)
