@@ -99,3 +99,10 @@ OFPST_PORT_DESC reply (xid=0x2):
 
 Which are vxlan tunnels that connects all controllers.
 
+## ICMP Examples
+
+Then we can simulate sending the ICMP packet on the port
+
+```
+[root@compute-0 ~]# ovs-appctl ofproto/trace br-int in_port=5,icmp,icmp_type=8
+```
