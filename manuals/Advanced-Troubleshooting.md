@@ -44,9 +44,7 @@ Open configuration for the service which the agent/service shows as down.
 ```service_down_time :``` the longest time from the last heartbeat,  if it takes more than this time to get a heartbeat, then the service is down, the default is 60 seconds.
 
 Note: *```report_interval``` must be less than ```service_down_time```, otherwise you send a heartbeat each 60 seconds, and since agent is 30 seconds without heartbeat it will think that the service down, obviously the service will always be in the down state.*
-
- ## Possible root causes:
-
+## Possible root causes
 1. Database access errors leads to heartbeat update failure, this situation can be seen from the error log.
 
 2. RabbitMQ connection failure, nova-compute can not directly access the database, the update is done through the RPC call nova-conductor, if the RabbitMQ connection fails, RPC will not be able to perform, resulting in heartbeat transmission failure.
