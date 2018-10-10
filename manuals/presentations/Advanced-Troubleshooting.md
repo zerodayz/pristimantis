@@ -52,10 +52,82 @@ Note: *```report_interval``` must be less than ```service_down_time```, otherwis
 3. nova-conductor failure, the same reason, but this situation is very low probability, unless the someone closed the service.
 
 4. Time is not synchronized. This is very difficult to check this situation, because you can not find any error message in the log.
+# Searching
+With git  
 
-Possible replacement?
+```
+ git clone https://github.com/openstack/tripleo-heat-templates/
+ cd tripleo-heat-templates
+ git log --all-match -i --grep scheduler --grep nova
+```
 
-https://wiki.openstack.org/wiki/NovaZooKeeperHeartbeat
+With google on Red Hat portal & Bugzilla  
+
+```
+keyword site:access.redhat.com
+keyword site:bugzilla.redhat.com
+```
+
+With google on Launchpad and OpenStack.org
+
+```
+keyword site:openstack.org
+keyword site:launchpad.net
+```
+
+With man  
+
+```
+man -K keyword
+apropos keyword
+```
+# Code
+Searching for the keyword in Code  with `silver-searcher`
+
+Pre-requirements  
+
+```
+rpm -qa | grep silver
+the_silver_searcher-2.1.0-2.fc28.x86_64
+```
+Search the code  
+
+```
+git clone https://github.com/openstack/tripleo-heat-templates/
+cd tripleo-heat-templates
+🎩 ➜  tripleo-heat-templates git:(186e2cbb1) git tag | grep 7.0.1
+7.0.1
+7.0.10
+7.0.11
+7.0.12
+7.0.13
+7.0.14
+7.0.15
+ag keyword *
+```
+# Reporting bugs
+Check to see if your bug has already been filed.
+
+Some bugs may have been encountered by others before you. You can search Launchpad to see if anyone has already run into your issue and whether a fix is already available. Most bugs that have a fix committed will also have a comment with a pointer to the patch that fixes the issue. You may also want to search upstream bug reports to see if the problem isn't specific to the RHOS.
+You can find bug trackers for components here:
+
+https://bugzilla.redhat.com/query.cgi  
+https://bugzilla.redhat.com/query.cgi?format=advanced  
+https://ask.openstack.org/en/questions/  
+http://stackoverflow.com/questions/tagged/openstack  
+https://bugs.launchpad.net/nova/  
+https://bugs.launchpad.net/keystone  
+https://bugs.launchpad.net/glance  
+https://bugs.launchpad.net/swift  
+https://bugs.launchpad.net/horizon  
+https://bugs.launchpad.net/neutron  
+https://bugs.launchpad.net/cinder  
+https://bugs.launchpad.net/heat  
+https://bugs.launchpad.net/oslo  
+https://bugs.launchpad.net/ceilometer  
+https://bugs.launchpad.net/trove  
+https://bugs.launchpad.net/sahara  
+https://bugs.launchpad.net/tripleo  
 # Bugfix
 How to check if the bug https://bugs.launchpad.net/neutron/+bug/1187102 has been fixed in `openstack-neutron-2014.2.3-9.el7ost.noarch` ?
 
