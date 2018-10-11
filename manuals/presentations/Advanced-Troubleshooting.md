@@ -25,6 +25,18 @@ debug=True
 [barbican]
 [cache]
 ```
+## Enable container debug
+```
+[root@controller-0 ~]# grep ^debug /var/lib/config-data/puppet-generated/nova/etc/nova/nova.conf 
+debug=True
+[root@controller-0 ~]# crudini --set /var/lib/config-data/puppet-generated/nova/etc/nova/nova.conf DEFAULT debug False
+[root@controller-0 ~]# docker exec -it nova_api grep ^debug /etc/nova/nova.conf
+debug=True
+[root@controller-0 ~]# docker restart nova_api
+nova_api
+[root@controller-0 ~]# docker exec -it nova_api grep ^debug /etc/nova/nova.conf
+debug=False
+```
 # Date
 Always check date if the cluster is synced with NTP.
 # Agent health
