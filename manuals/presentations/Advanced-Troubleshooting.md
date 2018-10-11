@@ -110,7 +110,7 @@ When you are seeing `401 Unathorized` try opening the same in Chrome then
 
 1. Click the three dots `...` on the right side on your browser.
 2. Click `More tools`
-3. Click on `Developer tools (`Ctrl+Shift+i`)
+3. Click on `Developer tools Ctrl+Shift+i`
 4. Next reproduce the error and under `XHR` right click on the failed query.
 5. Click on `Copy` -> `Copy as cURL`
 
