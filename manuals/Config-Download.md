@@ -13,3 +13,5 @@ And enable the Mistral workflow to run the ansible playbooks after the stack cre
 Note: Will be enabled by default in upcoming release
 
 Reference: https://docs.openstack.org/tripleo-docs/latest/install/advanced_deployment/ansible_config_download.html
+# Generate inventory
+`tripleo-ansible-inventory --static-inventory inventory`
