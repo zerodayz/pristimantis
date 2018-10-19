@@ -8,5 +8,6 @@ cd pristimantis
 source ansiblerc
 source  ~stack/stackrc
 sh scripts/openstack/prepare-etc-hosts.sh | sudo tee -a /etc/hosts
+tripleo-ansible-inventory --static-inventory inventory
 ansible overcloud -m ping  -u heat-admin
 ```
