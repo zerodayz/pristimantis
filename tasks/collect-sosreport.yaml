@@ -18,6 +18,7 @@
 - name: Create sosreport
   hosts: "{{ hosts }}"
   user: heat-admin
+  serial: 3
   become: true
   tasks:
     - name: Create a temporary local sosreport directory
