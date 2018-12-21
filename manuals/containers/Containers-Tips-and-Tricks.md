@@ -17,3 +17,10 @@ https://access.redhat.com/containers/#/registry.access.redhat.com/rhosp13/openst
 docker pull registry.access.redhat.com/openshift3/prometheus:v3.11.51-1
 skopeo --tls-verify=false copy docker://registry.access.redhat.com/openshift3/prometheus:v3.11.51-1 docker://192.168.24.1:8787/openshift3/prometheus:v3.11.51-2
 ```
+
+## Docker diff
+```
+docker run registry.access.redhat.com/rhosp13/openstack-neutron-dhcp-agent:13.0-64 bash -c 'cat /usr/lib/python2.7/site-packages/neutron/agent/linux/dhcp.py' > a
+docker run registry.access.redhat.com/rhosp13/openstack-neutron-dhcp-agent:latest bash -c 'cat /usr/lib/python2.7/site-packages/neutron/agent/linux/dhcp.py' > b
+diff -u a b
+```
