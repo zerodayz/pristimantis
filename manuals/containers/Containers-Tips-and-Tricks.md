@@ -24,3 +24,11 @@ docker run registry.access.redhat.com/rhosp13/openstack-neutron-dhcp-agent:13.0-
 docker run registry.access.redhat.com/rhosp13/openstack-neutron-dhcp-agent:latest bash -c 'cat /usr/lib/python2.7/site-packages/neutron/agent/linux/dhcp.py' > b
 diff -u a b
 ```
+
+## Apply patch
+```
+sudo dnf install -y patch
+pushd /usr/share/openstack-tripleo-heat-templates/
+sudo patch -p1 < <(base64 --decode <(curl -s "https://review.openstack.org/changes/625971/revisions/887d444999548279117813aeb158eb54f6625059/patch?download"))
+popd
+```
