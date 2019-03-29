@@ -32,3 +32,10 @@ pushd /usr/share/openstack-tripleo-heat-templates/
 sudo patch -p1 < <(base64 --decode <(curl -s "https://review.openstack.org/changes/625971/revisions/887d444999548279117813aeb158eb54f6625059/patch?download"))
 popd
 ```
+
+# Docker container
+```
+ docker inspect --format='{{range .Config.Env}} -e "{{.}}" {{end}} {{range .Mounts}} -v {{.Source}}:{{.Destination}}{{if .Mode}}:{{.Mode}}{{end}}{{end}} -ti {{.Config.Image}}' $CONTAINER_ID_OR_NAME
+```
+
+http://tripleo.org/install/containers_deployment/tips_tricks.html
