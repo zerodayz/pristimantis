@@ -11,4 +11,4 @@ echo "Configuring python3"
 echo "Installing python3"
 make altinstall                     
 echo "Making symlink"
-ln -s /usr/local/bin/python3 /usr/bin/python3.7
+ln -s /usr/local/bin/python3.7 /usr/bin/python3
