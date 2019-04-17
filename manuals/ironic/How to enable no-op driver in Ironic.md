@@ -31,5 +31,5 @@ enabled_power_interfaces = redfish,ilo,idrac,ipmitool,fake
 - Change the node to use the `noop` management interface:
   
   ```
-  openstack baremetal node set  --management-interface noop
+  openstack baremetal node set $NODE --management-interface noop
   ```
