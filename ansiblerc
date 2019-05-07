@@ -8,3 +8,6 @@ export ANSIBLE_LIBRARY=~/pristimantis/modules
 
 #. ./ansible-env/bin/activate
 #pip install ansible
+source ~stack/stackrc
+echo "############# COPY THE FOLLOWING TO YOUR /etc/hosts FILE #############"
+bash scripts/openstack/prepare-etc-hosts.sh
