@@ -1,0 +1,53 @@
+---
+- name: Set bootstrap status to false on all Controllers
+  hosts: Controller
+  user: heat-admin
+  become: true
+  tasks:
+    - set_fact:
+        bootstrap_node: false
+        
+- name: Set the bootstrap status on the first Controller node
+  hosts: Controller[0]
+  user: heat-admin
+  become: true
+  tasks:
+  - set_fact:
+      bootstrap_node: true
+
+- name: Cluster unmanage RabbitMQ and HA Proxy
+  hosts: Controller
+  user: heat-admin
+  become: true
+  tasks:
+  - name: Unmanage rabbimq
+    command: "pcs resource unmanage rabbitmq-clone"
+    when: bootstrap_node == true
+  - name: Unmanage haproxy
+    command: "pcs resource unmanage haproxy"
+    when: bootstrap_node == true
+
+- name: Clean up rabbitmq processes
+  hosts: Controller
+  user: heat-admin
+  become: true
+  tasks:
+  - name: pkill rabbitmq processes
+    command: "pkill -u rabbitmq"
+  - name: remove mnesia database
+    command: "rm -rf /var/lib/rabbitmq/mnesia/*"
+
+- name: Cluster manage and cleanup RabbitMQ and HA Proxy
+  hosts: Controller
+  user: heat-admin
+  become: true
+  tasks:
+  - name: Manage rabbimq
+    command: "pcs resource manage rabbitmq-clone"
+    when: bootstrap_node == true
+  - name: Manage haproxy
+    command: "pcs resource manage haproxy"
+    when: bootstrap_node == true
+  - name: Manage haproxy
+    command: "pcs resource cleanup"
+    when: bootstrap_node == true
