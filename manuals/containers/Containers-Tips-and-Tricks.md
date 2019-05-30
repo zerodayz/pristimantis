@@ -1,6 +1,24 @@
 # Containers-Tips-and-Tricks
 # Docker
 
+## Run container with modified image
+
+```
+docker stop nova_compute
+
+paunch debug --file /var/lib/tripleo-config/hashed-docker-container-startup-config-step_4.json --container nova_compute --action dump-json > nova_compute.json
+
+vi nova_compute.json
+edit: 
+        "image": "registry.access.redhat.com/rhosp13/openstack-nova-compute:latest",
+
+paunch debug --file nova_compute.json --container nova_compute --action run
+
+docker stop nova_compute-xyz
+
+docket start nova_compute
+```
+
 ## Verify Checksum
 Look at the ID and verify the one vs the one in
 https://access.redhat.com/containers/#/registry.access.redhat.com/rhosp13/openstack-horizon/images/13.0-54
